@@ -1,0 +1,12 @@
+fastapi
+youtube-transcript-api
+langchain
+langchain-community
+langchain-huggingface
+langchain-openai
+chroma
+sentence-transformers
+pydantic
+aiohttp
+uvicorn
+dotenv

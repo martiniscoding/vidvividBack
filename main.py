@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 import os 
 from dotenv import load_dotenv
+import uvicorn 
 load_dotenv()
 app=FastAPI()
 app.add_middleware(
@@ -94,3 +95,6 @@ def view(query:Query):
  return {
     "answer":final_ans.content
  }
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))

@@ -7,6 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
 from fastapi.middleware.cors import CORSMiddleware
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 import os 
 from dotenv import load_dotenv
 load_dotenv()
@@ -22,8 +23,10 @@ class Query(BaseModel):
    statement:str
    id:str
 
-embedding=HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+embedding=HuggingFaceEndpointEmbeddings(
+    model="sentence-transformers/all-MiniLM-L6-v2",
+    huggingfacehub_api_token=os.getenv("HUGGINGFACE_API_KEY")
+    
     
 )
 llm= ChatOpenAI(

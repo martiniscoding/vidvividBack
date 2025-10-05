@@ -11,6 +11,7 @@ from langchain_huggingface import HuggingFaceEndpointEmbeddings
 import os 
 from dotenv import load_dotenv
 import uvicorn 
+from youtube_transcript_api import YouTubeTranscriptApi
 load_dotenv()
 app=FastAPI()
 app.add_middleware(
@@ -37,30 +38,27 @@ llm= ChatOpenAI(
     openai_api_base="https://openrouter.ai/api/v1",
 )
 
-@app.post("/ask/")
+@app.post("/ask")
 def view(query:Query):
  
  video_id = query.id
+ ytt_api=YouTubeTranscriptApi()
  transcript=[]
- try:
-    fetched_transcript = YouTubeTranscriptApi().fetch(video_id) 
-    for i in fetched_transcript.snippets:
-        transcript.append(i.text)
 
- except TranscriptsDisabled:
-    return {
-       "message":"video do not allow transcripts "
-    }
+ ans = ytt_api.fetch(video_id)
+ for i in ans:
+   transcript.append(i.text)
+   
+ 
 
 
  total_transcript="".join(transcript) #working
-
  splitter=RecursiveCharacterTextSplitter(
     chunk_size=1000,
     chunk_overlap=10
 )
  splitted_text=splitter.split_text(total_transcript) #working
-
+ 
 
  vector_store=Chroma.from_texts(
     texts=splitted_text,
@@ -74,12 +72,12 @@ def view(query:Query):
 
  template= PromptTemplate(
     template="""
-    you are a expert adviser who is expert in framing a very good message out of given context
-    , answer the question aksed with reference to the following context only ,
-    questoin - {question}
+    you are a expert adviser who is expert in framing an answer out of given context
+    , answer the question asked with reference to the following context only ,
+    question - {question}
     context - {text}
-    if the text seems insufficient reply saying not sufficient information
-    reply like you are a very loving teacher who loves to help his students
+    if the context seems insufficient reply saying not sufficient information
+    act like you already know everything about the video
     """,
     input_variables=["question", "text"]
 )
@@ -91,6 +89,7 @@ def view(query:Query):
   index.append(i.page_content)
  final_index=" ".join(index) #working
  prompt= template.invoke({"question":input,"text":final_index})
+ print(prompt)
  final_ans=llm.invoke(prompt)
  return {
     "answer":final_ans.content
